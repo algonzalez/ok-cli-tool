@@ -1,0 +1,16 @@
+# Project commands to build, test and run
+dotnet clean    # remove the build generated artifacts
+dotnet build    # build the current project/solution
+dotnet test     # run any tests
+dotnet run      # run the project/app
+
+# Project commands for release
+dotnet build -c RELEASE -o ./dist   # build release for distribution
+dotnet publish -c RELEASE -o ./publish  # build app for deployment to hosting
+dotnet pack  -c RELEASE -o ./nuget  # create the NuGet package for the project
+
+# Install tool from local repository
+dotnet tool install --global --add-source ./nuget ok-cli-tool
+cmd /c dotnet tool uninstall --global ok-cli-tool
+
+# TODO: some git commands
