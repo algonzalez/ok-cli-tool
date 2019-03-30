@@ -28,6 +28,8 @@
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageTags>ok tool</PackageTags>
     <PackageProjectUrl>https://github.com/algonzalez/ok-cli-tool</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/algonzalez/ok-cli-tool</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <Product>ok-cli-tool</Product>
   </PropertyGroup>
 
