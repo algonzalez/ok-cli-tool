@@ -59,7 +59,7 @@
             if (groupWidth > 0)
                 groupWidths[groupIndex] = groupWidth;
 
-            int maxWidth = groupWidths.Values.Max();
+            int maxWidth = groupWidths.Values.DefaultIfEmpty(0).Max();
             groupIndex = 0;
             foreach (var okItem in this)
             {

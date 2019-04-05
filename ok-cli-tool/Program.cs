@@ -82,17 +82,20 @@
 
             if (app.RemainingArguments.Count == 0) {
                 _okItemList.WriteList(_config);
-                return OK;
+                Console.ForegroundColor = _config.Colors.Prompt;
+                Console.Write(_config.Prompt);
+                var input = Console.ReadLine().Trim();
+                if (string.IsNullOrEmpty(input))
+                    return OK;
+
+                var inputParts = input.Split(' ');
+                app.RemainingArguments.Add(inputParts[0]);
+                if (inputParts.Length > 1) {
+                    app.RemainingArguments.Add(input.Substring(inputParts[0].Length).TrimStart());
+                }
             }
 
-            int? commandNumber = null;
-            if (app.RemainingArguments.Count > 0) {
-                int number;
-                if (int.TryParse(app.RemainingArguments[0], out number))
-                    commandNumber = number;
-            }
-
-            if (!commandNumber.HasValue) {
+            if (!int.TryParse(app.RemainingArguments[0], out int commandNumber)) {
                 _okItemList.WriteList(_config);
                 return OK;
             }
@@ -103,7 +106,7 @@
                 return INVALID_ARGUMENT;
             }
 
-            var okItem = _okItemList.FindCommandByNumber(commandNumber.Value);
+            var okItem = _okItemList.FindCommandByNumber(commandNumber);
             if (_config.VerbosityLevel != VerbosityLevel.Quiet)
             {
                 Console.ForegroundColor = _config.Colors.Prompt;
@@ -123,12 +126,7 @@
             var sbArgs = new StringBuilder($"/C {okItem.CommandText}");
             for (int i = 1; i < app.RemainingArguments.Count; i++)
             {
-                var arg = app.RemainingArguments[i];
-                sbArgs.Append(" ");
-                if (!arg.Contains(' '))
-                    sbArgs.Append(arg);
-                else
-                    sbArgs.Append("\"").Append(arg).Append("\"");
+                sbArgs.Append(" ").Append(app.RemainingArguments[i]);
             }
 
             var proc = new Process();
@@ -189,7 +187,7 @@
             app.Option("-h|--help", "Show this usage information.", CommandOptionType.NoValue);
             app.Option("-v|--verbose", "Show more output, mostly errors. Will also show environment-variables in this screen.", CommandOptionType.NoValue);
             app.Option("-q|--quiet", "Show less output.", CommandOptionType.NoValue);
-            app.Option("--version", "Show version # and exit.", CommandOptionType.NoValue);
+            app.Option("-V|--version", "Show version # and exit.", CommandOptionType.NoValue);
 
             return app;
         }
@@ -226,7 +224,7 @@ options:
   -v, --verbose         Show more output, mostly errors.
                         Will also show environment-variables in this screen.
   -q, --quiet           Show less output.
-      --version         Show version # and exit."
+  -V  --version         Show version # and exit."
   + (_config.VerbosityLevel == VerbosityLevel.Verbose ?
 @"
 

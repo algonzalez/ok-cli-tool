@@ -1,5 +1,10 @@
 # ok-cli-tool
 
+[![package version](https://img.shields.io/nuget/v/ok-cli-tool.svg?color=blue)](https://www.nuget.org/packages/ok-cli-tool/)
+![dot NET Core version 2.2.](https://img.shields.io/badge/.NET%20Core-v2.2-orange.svg)
+[![package license](https://img.shields.io/github/license/algonzalez/ok-cli-tool.svg)](https://github.com/algonzalez/ok-cli-tool/blob/master/LICENSE.txt)
+![supported platforms](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20macos-lightgray.svg)
+
 A dotnet core command line tool to work with '.ok' files as described in '[I'm .ok you're .ok: introducing folder profiles for bash and powershell](http://secretgeek.net/ok)' by Leon Bambrick (aka secretGeek).
 
 > Take a look at secretGeek's '["ok" folder profiles for bash](https://github.com/secretGeek/ok-bash)' if you prefer working in `Bash`; or his '["ok" folder profiles for powershell](https://github.com/secretGeek/ok-ps)' if you are more of a `PowerShell` aficionado.
