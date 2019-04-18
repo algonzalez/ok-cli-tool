@@ -34,6 +34,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="gitcommit.txt" />
+  </ItemGroup>
+
+  <Target Name="WriteGitCommitFile" BeforeTargets="BeforeBuild">
+    <Message Text="Writing Git Commit # to 'gitcommit.txt'"  Importance="high" />
+    <Exec Command="git rev-parse HEAD > $(ProjectDir)gitcommit.txt" />
+  </Target>
+
+  <Target Name="DeleteGitCommitFile" BeforeTargets="AfterBuild">
+    <Message Text="Deleting the 'gitcommit.txt' file" Importance="high" />
+    <Delete Files="$(ProjectDir)gitcommit.txt" />
+  </Target>
+
+  <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.3.3" />
   </ItemGroup>
 

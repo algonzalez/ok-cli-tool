@@ -58,6 +58,16 @@ Now when I run `ok 6`, the current code will be packaged for deployment into the
 
 To see available options, run `ok --help`. Add the verbose option `ok --help --verbose` to see what environment variable settings are availabe. 
 
+## Roadmap
+
+- [x] v1.x feature parity with '["ok" folder profiles for bash](https://github.com/secretGeek/ok-bash)'
+- [ ] >= v2.x 
+  - [ ] support configuration via dotfile instead of (or in addtion to?) environment variables
+  - [ ] support named commands (aka aliases)
+  - [ ] support platform specific commands (linux, macos, windows)
+  - [ ] consider removing help and list commands and just use the options
+  - [ ] consider removing verbosity level (doesn't seem to add that much)
+
 ## License
 
 [MIT](LICENSE.txt)

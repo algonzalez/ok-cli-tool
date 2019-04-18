@@ -5,11 +5,15 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
     using System.Runtime.InteropServices;
+    using System.Runtime.Versioning;
     using System.Text;
     using Gonzal.ExtensionMethods;
     using Gonzal.OK.Cli.Tool.OKItems;
     using McMaster.Extensions.CommandLineUtils;
+
+    using static System.Runtime.InteropServices.RuntimeInformation;
 
     class Program
     {
@@ -18,10 +22,7 @@
         const int UNEXPECTED_ERROR = 1;
         const int INVALID_ARGUMENT = 2;
 
-        static readonly string DefaultFileName = ".ok";
-
-        Config _config;
-        string _okFileName = DefaultFileName;
+        Config _config = new Config();
         OKItemList _okItemList;
 
         static int Main(string[] args)
@@ -35,67 +36,39 @@
             return new Program().Run(args);
         }
 
-        private EventHandler ShowListCommandEventHandler;
-
-        private void ShowListCommand(object sender, EventArgs e)
-        {
-            if (_okItemList == null && File.Exists(_okFileName))
-                _okItemList = OKItemList.FromFile(_okFileName);
-            if (_okItemList != null)
-                _okItemList.WriteList(_config);
-            Environment.Exit(OK);
-        }
-
         public int Run(string[] args)
         {
-            _config = new Config();
-
-            this.ShowListCommandEventHandler += ShowListCommand;
-
-            var app = CreateCommandLineApplication();
-            app.Execute(args);
-
-            CommandOption opt;
-            if ((opt = app.Options.GetOption("verbose")) != null && opt.HasValue()) {
-                _config.VerbosityLevel = VerbosityLevel.Verbose;
-            }
-            else if ((opt = app.Options.GetOption("quiet")) != null && opt.HasValue()) {
-                _config.VerbosityLevel = VerbosityLevel.Quiet;
-            }
-            if ((opt = app.Options.GetOption("comment_align")) != null && opt.HasValue()) {
-                int alignment;
-                if (int.TryParse(opt.Value(), out alignment))
-                    _config.CommentAlignment = alignment.ToEnum(CommentAlignment.ByGroup);
-            }
-            if (app.Options.GetOption("help").HasValue()) {
-                ShowHelp();
+            var options = CommandLineOptions.Parse(args, _config);
+            if (options.WasHelpRequested)
+                return ShowHelp();
+            if (options.WasInfoRequested)
+                return ShowInfo();
+            if (options.WasVersionRequestd)
+                return ShowVersion();
+            if (!File.Exists(options.FileName))
                 return OK;
-            }
-            if (app.Options.GetOption("version").HasValue()) {
-                Console.WriteLine(typeof(Program).Assembly.GetVersion());
-                return OK;
-            }
-            _okFileName = app.Options.GetOption("file").Values.FirstOrDefault() ?? DefaultFileName;
-            if (!File.Exists(_okFileName)) return 0;
 
-            _okItemList = OKItemList.FromFile(_okFileName);
+            _okItemList = OKItemList.FromFile(options.FileName);
 
-            if (app.RemainingArguments.Count == 0) {
+            if (options.RemainingArgs.Count == 0) {
                 _okItemList.WriteList(_config);
                 Console.ForegroundColor = _config.Colors.Prompt;
                 Console.Write(_config.Prompt);
                 var input = Console.ReadLine().Trim();
-                if (string.IsNullOrEmpty(input))
+                if (string.IsNullOrEmpty(input)) {
+                    Console.ForegroundColor = _config.Colors.Original;
                     return OK;
+                }
 
                 var inputParts = input.Split(' ');
-                app.RemainingArguments.Add(inputParts[0]);
-                if (inputParts.Length > 1) {
-                    app.RemainingArguments.Add(input.Substring(inputParts[0].Length).TrimStart());
-                }
+                options.RemainingArgs.Add(inputParts[0]);
+                if (inputParts.Length > 1)
+                    options.RemainingArgs.Add(input.Substring(inputParts[0].Length).TrimStart());
+            } else if (options.WasListRequested) {
+                _okItemList.WriteList(_config);
             }
 
-            if (!int.TryParse(app.RemainingArguments[0], out int commandNumber)) {
+            if (!int.TryParse(options.RemainingArgs[0], out int commandNumber)) {
                 _okItemList.WriteList(_config);
                 return OK;
             }
@@ -106,27 +79,32 @@
                 return INVALID_ARGUMENT;
             }
 
-            var okItem = _okItemList.FindCommandByNumber(commandNumber);
+            var commandItem = _okItemList.FindCommandByNumber(commandNumber);
             if (_config.VerbosityLevel != VerbosityLevel.Quiet)
             {
                 Console.ForegroundColor = _config.Colors.Prompt;
-                Console.Write($"{_config.Prompt}{okItem.CommandText}");
-                if (okItem.HasComment)
+                Console.Write($"{_config.Prompt}{commandItem.CommandText}");
+                if (commandItem.HasComment)
                 {
                     Console.ForegroundColor = _config.Colors.Comment;
-                    Console.Write($" {okItem.CommentText}");
+                    Console.Write($" {commandItem.CommentText}");
                 }
                 Console.ForegroundColor = _config.Colors.Original;
                 Console.WriteLine();
             }
 
+            return RunCommand(commandItem, options);
+
+        }
+
+        private int RunCommand(OKCommandItem commandItem, CommandLineOptions options) {
             // TODO: for Linux/Mac (NEEDS TESTING)
             //       does command need to be quoted???
             // var sbArgs = new StringBuilder($"-c {okLine.CommandText}");
-            var sbArgs = new StringBuilder($"/C {okItem.CommandText}");
-            for (int i = 1; i < app.RemainingArguments.Count; i++)
+            var sbArgs = new StringBuilder($"/C {commandItem.CommandText}");
+            for (int i = 1; i < options.RemainingArgs.Count; i++)
             {
-                sbArgs.Append(" ").Append(app.RemainingArguments[i]);
+                sbArgs.Append(" ").Append(options.RemainingArgs[i]);
             }
 
             var proc = new Process();
@@ -152,100 +130,118 @@
             return proc.ExitCode;
         }
 
-        private CommandLineApplication CreateCommandLineApplication() {
-            var appAssembly = typeof(Program).Assembly;
-            var appVersion = appAssembly.GetVersion();
-            var title = appAssembly.GetTitle();
-
-            var app = new CommandLineApplication() {
-                Name = title,
-                FullName = title,
-                Description = appAssembly.GetDescription().Replace("\\n", "\n"),
-                ShortVersionGetter = () => appVersion,
-                LongVersionGetter = () => "v" + appVersion,
-                ThrowOnUnexpectedArgument = false,
-            };
-
-            Action<CommandLineApplication> showListAction = configCmd => {
-                configCmd.OnExecute(() => ShowListCommandEventHandler.Invoke(this, null));
-            };
-            app.Command("l", showListAction);
-            app.Command("ls", showListAction);
-            app.Command("list", showListAction);
-
-            Action<CommandLineApplication> showHelpAction = configCmd => {
-                configCmd.OnExecute(() => {
-                    ShowHelp();
-                    Environment.Exit(OK);
-                });
-            };
-            app.Command("h", showHelpAction);
-            app.Command("help", showHelpAction);
-
-            app.Option("-c|--comment_align", "Level of comment alignment", CommandOptionType.SingleValue);
-            app.Option("-f|--file", "Use a custom file instead of '.ok'.", CommandOptionType.SingleValue);
-            app.Option("-h|--help", "Show this usage information.", CommandOptionType.NoValue);
-            app.Option("-v|--verbose", "Show more output, mostly errors. Will also show environment-variables in this screen.", CommandOptionType.NoValue);
-            app.Option("-q|--quiet", "Show less output.", CommandOptionType.NoValue);
-            app.Option("-V|--version", "Show version # and exit.", CommandOptionType.NoValue);
-
-            return app;
-        }
-
-        private void ShowHelp()
+        private int ShowHelp()
         {
             var appAssembly = typeof(Program).Assembly;
 
+            Console.ForegroundColor = _config.Colors.Comment;
             Console.WriteLine(
 $@"{appAssembly.GetTitle()} v{appAssembly.GetVersion()}
 {appAssembly.GetCopyright()}
 {appAssembly.GetDescription()}
+");
+            Console.ForegroundColor = _config.Colors.Heading;
+            Console.Write("Usage: ");
+            Console.ForegroundColor = _config.Colors.Command;
+            Console.WriteLine("ok [options] <number> [script-arguments...]");
+            Console.WriteLine("       ok <command> [options]");
+            Console.WriteLine();
+            Console.ForegroundColor = _config.Colors.Heading;
+            Console.WriteLine("number:");
+            WriteKeyValue("  1..commandCount       ", "Run <number>th command from the '.ok' file.");
+            Console.WriteLine();
+            Console.ForegroundColor = _config.Colors.Heading;
+            Console.WriteLine("script-arguments:");
+            WriteKeyValue("  ...                   ", "These are passed through, when a line is executed");
+            Console.WriteLine();
+            Console.ForegroundColor = _config.Colors.Heading;
+            Console.WriteLine("command:");
+            WriteKeyValue("  l, list               ", "Show the list from the '.ok' file.");
+            WriteKeyValue("                        ", "Default command when none are specified.");
+            WriteKeyValue("  h, help               ", "Show this usage information.");
+            Console.WriteLine();
+            Console.ForegroundColor = _config.Colors.Heading;
+            Console.WriteLine("options:");
+            WriteKeyValue("  -c, --comment_align N ", "Level of comment alignment.");
+            WriteKeyValue("                        ", "0=no alignment, 1=align consecutive lines (Default),");
+            WriteKeyValue("                        ", "2=including whitespace, 3 align all.");
+            WriteKeyValue("  -f, --file            ", "Use a custom file instead of '.ok'.");
+            WriteKeyValue("  -h, --help            ", "Show this usage information.");
+            WriteKeyValue("  -i, --info            ", "Show tool and runtime information.");
+            WriteKeyValue("  -v, --verbose         ", "Show more output, mostly errors.");
+            WriteKeyValue("                        ", "Will also show environment-variables in this screen.");
+            WriteKeyValue("  -q, --quiet           ", "Show less output.");
+            WriteKeyValue("  -V  --version         ", "Show version # and exit.");
+            if (_config.VerbosityLevel == VerbosityLevel.Verbose) {
+                Console.WriteLine();
+                Console.ForegroundColor = _config.Colors.Heading;
+                Console.WriteLine("environment variables (used for colored output, see System.ConsoleColor):");
+                WriteKeyValue("  _OK_C_HEADING         ", "Color for lines starting with a comment (heading).");
+                WriteKeyValue("                        ", "Defaults to red.");
+                WriteKeyValue("  _OK_C_NUMBER          ", "Color for numbering. Defaults to cyan.");
+                WriteKeyValue("  _OK_C_COMMENT         ", "Color for comments. Defaults to blue.");
+                WriteKeyValue("  _OK_C_COMMAND         ", "Color for commands.");
+                WriteKeyValue("                        ", "Defaults to standard terminal color.");
+                WriteKeyValue("  _OK_C_PROMPT          ", "Color for prompt. Defaults to cyan.");
+                Console.ForegroundColor = _config.Colors.Heading;
+                Console.WriteLine("environment variables (other configuration):");
+                WriteKeyValue("  _OK_COMMENT_ALIGN     ", "Level of comment alignment. 0=no alignment,");
+                WriteKeyValue("                        ", "1=align consecutive lines (Default),");
+                WriteKeyValue("                        ", "2=including whitespace, 3 align all.");
+                WriteKeyValue("  _OK_PROMPT            ", "String used as prompt. Defaults to '> '.");
+                WriteKeyValue("  _OK_VERBOSE           ", "Level of feedback ok cli provides.");
+                WriteKeyValue("                        ", "0=quiet, 1=normal (Default),");
+                WriteKeyValue("                        ", "2=verbose. Can be overriden with --verbose or --quiet.");
+            }
 
-Usage: ok [options] <number> [script-arguments...]
-       ok <command> [options]
+            return OK;
+        }
 
-number:
-  1..commandCount       Run <number>th command from the '.ok' file.
+        private int ShowInfo()
+        {
+            var programType = typeof(Program);
+            var appAssembly = programType.Assembly;
+            string gitCommit;
 
-script-arguments:
-  ...                   These are passed through, when a line is executed
+            using (var resource = appAssembly.GetManifestResourceStream($"{programType.Namespace}.gitcommit.txt"))
+            using (var sr = new StreamReader(resource))
+                gitCommit = sr.EndOfStream ? "[Not Specified]" : sr.ReadLine().Substring(0, 8);
 
-command:
-  l, list               Show the list from the '.ok' file.
-                        Default command when none are specified.
-  h, help               Show this usage information.
+            var osPlatform
+                = IsOSPlatform(OSPlatform.Linux) ? "Linux"
+                    : IsOSPlatform(OSPlatform.OSX) ? "macOS"
+                    : IsOSPlatform(OSPlatform.Windows) ? "Windows"
+                    : "Unknown";
 
-options:
-  -c, --comment_align N Level of comment alignment.
-                        0=no alignment, 1=align consecutive lines (Default),
-                        2=including whitespace, 3 align all.
-  -f, --file            Use a custom file instead of '.ok'.
-  -h, --help            Show this usage information.
-  -v, --verbose         Show more output, mostly errors.
-                        Will also show environment-variables in this screen.
-  -q, --quiet           Show less output.
-  -V  --version         Show version # and exit."
-  + (_config.VerbosityLevel == VerbosityLevel.Verbose ?
-@"
+            Console.ForegroundColor = _config.Colors.Heading;
+            Console.WriteLine($@"{appAssembly.GetName().Name}:");
+            WriteKeyValue("  Version:   ", appAssembly.GetVersion());
+            WriteKeyValue("  Commit #:  ", gitCommit);
+            Console.WriteLine();
+            Console.ForegroundColor = _config.Colors.Heading;
+            Console.WriteLine("Runtime Environment:");
+            WriteKeyValue("  .NET Framework:     ", Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName);
+            WriteKeyValue("  OS Name:            ", OSDescription);
+            WriteKeyValue("  OS Platform:        ", $"{osPlatform} {(Environment.Is64BitOperatingSystem ? 64 : (IntPtr.Size * 8))}-bit");
+            WriteKeyValue("  Base Path:          ", AppContext.BaseDirectory);
+            WriteKeyValue("  Configuration Path: ", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".ok-cli-tool"));
+            Console.ForegroundColor = _config.Colors.Original;
 
-environment variables (used for colored output, see System.ConsoleColor):
-  _OK_C_HEADING         Color for lines starting with a comment (heading).
-                        Defaults to red.
-  _OK_C_NUMBER          Color for numbering. Defaults to cyan.
-  _OK_C_COMMENT         Color for comments. Defaults to blue.
-  _OK_C_COMMAND         Color for commands.
-                        Defaults to standard terminal color.
-  _OK_C_PROMPT          Color for prompt. Defaults to cyan.
-environment variables (other configuration):
-  _OK_COMMENT_ALIGN     Level of comment alignment. 0=no alignment,
-                        1=align consecutive lines (Default),
-                        2=including whitespace, 3 align all.
-  _OK_PROMPT            String used as prompt. Defaults to '> '.
-  _OK_VERBOSE           Level of feedback ok cli provides.
-                        0=quiet, 1=normal (Default),
-                        2=verbose. Can be overriden with --verbose or --quiet.
-" : "")
-            );
+            return OK;
+        }
+
+        private int ShowVersion()
+        {
+            Console.WriteLine(typeof(Program).Assembly.GetVersion());
+            return OK;
+        }
+
+        private void WriteKeyValue(string key, string value)
+        {
+            Console.ForegroundColor = _config.Colors.Number;
+            Console.Write(key);
+            Console.ForegroundColor = _config.Colors.Command;
+            Console.WriteLine(value);
         }
     }
 }

@@ -1,2 +1,6 @@
 bin/
 obj/
+
+# create by pre build task and deleted by post build task
+# this is in case the delete doesn't take
+ok-cli-tool/gitcommit.txt
