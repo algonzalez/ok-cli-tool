@@ -1,4 +1,4 @@
-namespace Gonzal.OK.Cli.Tool
+namespace OK.Cli.Tool
 {
     public enum CommentAlignment {
         None,

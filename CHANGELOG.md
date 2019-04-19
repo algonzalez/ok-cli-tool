@@ -6,16 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v1.2.0 - 2019-04-18
+
 ### Added
 
+- support for configuration via a .ok-cli-tool.env file
 - pre & post build tasks to get and embed the git commit # 
-- info option to display tool and runtime information 
+- info option to display runtime and configuration details 
 - roadmap to README.md
 
 ### Changed
 
 - extracted command line options definition and parsing to CommandLineOptions class
 - colorized help output
+- reconsidered namespace s
 
 ## v1.1.0 - 2019-04-05
 

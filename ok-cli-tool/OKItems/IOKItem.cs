@@ -1,4 +1,4 @@
-namespace Gonzal.OK.Cli.Tool.OKItems
+namespace OK.Cli.Tool.OKItems
 {
     public interface IOKItem {
         int CommandNumber { get; }

@@ -1,9 +1,9 @@
-namespace Gonzal.OK.Cli.Tool
+namespace OK.Cli.Tool
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Gonzal.ExtensionMethods;
+    using Nomadic.ExtensionMethods;
     using McMaster.Extensions.CommandLineUtils;
 
     class CommandLineOptions

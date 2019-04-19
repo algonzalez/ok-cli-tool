@@ -1,4 +1,4 @@
-namespace Gonzal.ExtensionMethods
+namespace Nomadic.ExtensionMethods
 {
     using System;
     using System.Reflection;

@@ -1,7 +1,7 @@
-namespace Gonzal.OK.Cli.Tool
+namespace OK.Cli.Tool
 {
     using System;
-    using ExtensionMethods;
+    using Nomadic.ExtensionMethods;
 
     public class OutputColors
     {

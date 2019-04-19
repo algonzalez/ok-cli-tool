@@ -1,4 +1,4 @@
-﻿namespace Gonzal.OK.Cli.Tool
+﻿namespace OK.Cli.Tool
 {
     using System;
     using System.Collections.Generic;
@@ -9,9 +9,9 @@
     using System.Runtime.InteropServices;
     using System.Runtime.Versioning;
     using System.Text;
-    using Gonzal.ExtensionMethods;
-    using Gonzal.OK.Cli.Tool.OKItems;
     using McMaster.Extensions.CommandLineUtils;
+    using Nomadic.ExtensionMethods;
+    using OK.Cli.Tool.OKItems;
 
     using static System.Runtime.InteropServices.RuntimeInformation;
 
@@ -94,7 +94,6 @@
             }
 
             return RunCommand(commandItem, options);
-
         }
 
         private int RunCommand(OKCommandItem commandItem, CommandLineOptions options) {
@@ -225,6 +224,20 @@ $@"{appAssembly.GetTitle()} v{appAssembly.GetVersion()}
             WriteKeyValue("  OS Platform:        ", $"{osPlatform} {(Environment.Is64BitOperatingSystem ? 64 : (IntPtr.Size * 8))}-bit");
             WriteKeyValue("  Base Path:          ", AppContext.BaseDirectory);
             WriteKeyValue("  Configuration Path: ", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".ok-cli-tool"));
+            Console.WriteLine();
+            Console.ForegroundColor = _config.Colors.Heading;
+            Console.WriteLine("Configuration:");
+            WriteKeyValue("  _OK_COMMENT_ALIGN: ", _config.CommentAlignment.ToString());
+            WriteKeyValue("  _OK_PROMPT:        ", $"\"{_config.Prompt}\"");
+            WriteKeyValue("  _OK_VERBOSE:       ", _config.VerbosityLevel.ToString());
+            Console.WriteLine();
+            Console.ForegroundColor = _config.Colors.Heading;
+            Console.WriteLine("Configuration Colors:");
+            WriteKeyValue("  _OK_C_HEADING: ", _config.Colors.Heading.ToString());
+            WriteKeyValue("  _OK_C_NUMBER:  ", _config.Colors.Number.ToString());
+            WriteKeyValue("  _OK_C_COMMENT: ", _config.Colors.Comment.ToString());
+            WriteKeyValue("  _OK_C_COMMAND: ", _config.Colors.Command.ToString());
+            WriteKeyValue("  _OK_C_PROMPT : ", _config.Colors.Prompt.ToString());
             Console.ForegroundColor = _config.Colors.Original;
 
             return OK;

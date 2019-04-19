@@ -1,9 +1,8 @@
-namespace Gonzal.OK.Cli.Tool.OKItems
+namespace OK.Cli.Tool.OKItems
 {
     public class OKEmptyItem : OKItem
     {
-        public OKEmptyItem()
-            : base()
+        public OKEmptyItem() : base()
         { }
     }
 }

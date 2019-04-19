@@ -1,10 +1,14 @@
-namespace Gonzal.OK.Cli.Tool
+namespace OK.Cli.Tool
 {
     using System;
-    using ExtensionMethods;
+    using System.IO;
+    using Nomadic;
+    using Nomadic.ExtensionMethods;
 
     partial class Config
     {
+        private const string ENV_FILENAME = ".ok-cli-tool.env";
+
         public static readonly CommentAlignment _defaultCommentAlignment = CommentAlignment.ByGroup;
         public static readonly string _defaultPrompt = "> ";
         public static readonly VerbosityLevel _defaultVerbosityLevel = VerbosityLevel.Normal;
@@ -13,7 +17,19 @@ namespace Gonzal.OK.Cli.Tool
         private string _prompt = null;
         private VerbosityLevel? _verbosityLevel;
 
-        public OutputColors Colors { get; } = new OutputColors();
+        public Config() {
+            string envPath;
+            if (File.Exists(envPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ENV_FILENAME))) {
+                Env.From(envPath, skipParseErrors: true).MergeWithOverride();
+            }
+            else if (File.Exists(envPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ENV_FILENAME))) {
+                Env.From(envPath, skipParseErrors: true).MergeWithOverride();
+            }
+
+            Colors = new OutputColors();
+        }
+
+        public OutputColors Colors { get; }
 
         public CommentAlignment CommentAlignment {
             get {

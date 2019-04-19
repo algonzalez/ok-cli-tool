@@ -1,4 +1,4 @@
-namespace Gonzal.OK.Cli.Tool.OKItems
+namespace OK.Cli.Tool.OKItems
 {
     public class OKCommandItem : OKItem {
         public OKCommandItem(int commandNumber, string commandText, string commentText = "")
