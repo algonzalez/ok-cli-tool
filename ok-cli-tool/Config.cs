@@ -4,10 +4,11 @@ namespace OK.Cli.Tool
     using System.IO;
     using Nomadic;
     using Nomadic.ExtensionMethods;
+    using static System.Environment;
 
     partial class Config
     {
-        private const string ENV_FILENAME = ".ok-cli-tool.env";
+        public const string ENV_FILENAME = ".ok-cli-tool.env";
 
         public static readonly CommentAlignment _defaultCommentAlignment = CommentAlignment.ByGroup;
         public static readonly string _defaultPrompt = "> ";
@@ -18,16 +19,14 @@ namespace OK.Cli.Tool
         private VerbosityLevel? _verbosityLevel;
 
         public Config() {
-            string envPath;
-            if (File.Exists(envPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ENV_FILENAME))) {
-                Env.From(envPath, skipParseErrors: true).MergeWithOverride();
-            }
-            else if (File.Exists(envPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ENV_FILENAME))) {
-                Env.From(envPath, skipParseErrors: true).MergeWithOverride();
-            }
+            DotEnvConfigFilePath = FindDotEnvConfigFilePath();
+            if (File.Exists(DotEnvConfigFilePath))
+                Env.From(DotEnvConfigFilePath, skipParseErrors: true).MergeWithOverride();
 
             Colors = new OutputColors();
         }
+
+        public string DotEnvConfigFilePath { get; }
 
         public OutputColors Colors { get; }
 
@@ -74,6 +73,14 @@ namespace OK.Cli.Tool
             set {
                 _verbosityLevel = value;
             }
+        }
+
+        private string FindDotEnvConfigFilePath() {
+            string envPath = Path.Combine(GetFolderPath(SpecialFolder.UserProfile), ENV_FILENAME);
+            if (!File.Exists(envPath)) {
+                envPath = Path.Combine(GetFolderPath(SpecialFolder.ApplicationData), ENV_FILENAME);
+            }
+            return envPath;
         }
     }
 }
