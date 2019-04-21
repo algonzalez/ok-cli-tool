@@ -6,17 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+- mention set environment variables from .ok-cli-tool.env file
+
+### Fixed
+- display correct .env config file name (.ok-cli-tool.env NOT .ok-cli-tool)
+- restore original color when Ctrl+C is pressed at prompt
+
 ## v1.2.0 - 2019-04-18
 
 ### Added
-
 - support for configuration via a .ok-cli-tool.env file
 - pre & post build tasks to get and embed the git commit # 
 - info option to display runtime and configuration details 
 - roadmap to README.md
 
 ### Changed
-
 - extracted command line options definition and parsing to CommandLineOptions class
 - colorized help output
 - reconsidered namespace s

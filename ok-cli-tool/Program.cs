@@ -33,6 +33,11 @@
                 Environment.Exit(UNEXPECTED_ERROR);
             };
 
+            var orginalColor = Console.ForegroundColor;
+            Console.CancelKeyPress  += (sender, eventArgs) => {
+                Console.ForegroundColor = orginalColor;
+            };
+
             return new Program().Run(args);
         }
 
@@ -191,7 +196,11 @@ $@"{appAssembly.GetTitle()} v{appAssembly.GetVersion()}
                 WriteKeyValue("  _OK_VERBOSE           ", "Level of feedback ok cli provides.");
                 WriteKeyValue("                        ", "0=quiet, 1=normal (Default),");
                 WriteKeyValue("                        ", "2=verbose. Can be overriden with --verbose or --quiet.");
+                Console.WriteLine();
+                Console.ForegroundColor = _config.Colors.Original;
+                Console.WriteLine($"NOTE: environment variables may also be set in {_config.DotEnvConfigFilePath}");
             }
+            Console.ForegroundColor = _config.Colors.Original;
 
             return OK;
         }
@@ -219,11 +228,11 @@ $@"{appAssembly.GetTitle()} v{appAssembly.GetVersion()}
             Console.WriteLine();
             Console.ForegroundColor = _config.Colors.Heading;
             Console.WriteLine("Runtime Environment:");
-            WriteKeyValue("  .NET Framework:     ", Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName);
-            WriteKeyValue("  OS Name:            ", OSDescription);
-            WriteKeyValue("  OS Platform:        ", $"{osPlatform} {(Environment.Is64BitOperatingSystem ? 64 : (IntPtr.Size * 8))}-bit");
-            WriteKeyValue("  Base Path:          ", AppContext.BaseDirectory);
-            WriteKeyValue("  Configuration Path: ", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".ok-cli-tool"));
+            WriteKeyValue("  .NET Framework:   ", Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName);
+            WriteKeyValue("  OS Name:          ", OSDescription);
+            WriteKeyValue("  OS Platform:      ", $"{osPlatform} {(Environment.Is64BitOperatingSystem ? 64 : (IntPtr.Size * 8))}-bit");
+            WriteKeyValue("  Base Path:        ", AppContext.BaseDirectory);
+            WriteKeyValue("  .env Config File: ", _config.DotEnvConfigFilePath);
             Console.WriteLine();
             Console.ForegroundColor = _config.Colors.Heading;
             Console.WriteLine("Configuration:");

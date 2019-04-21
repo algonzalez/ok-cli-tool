@@ -1,4 +1,6 @@
 bin/
+dist/
+nuget/
 obj/
 
 # create by pre build task and deleted by post build task
