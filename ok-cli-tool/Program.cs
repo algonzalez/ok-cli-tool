@@ -102,10 +102,8 @@
         }
 
         private int RunCommand(OKCommandItem commandItem, CommandLineOptions options) {
-            // TODO: for Linux/Mac (NEEDS TESTING)
-            var sbArgs = new StringBuilder(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? $"/C {commandItem.CommandText}"
-                : $"-c {commandItem.CommandText}");
+            // TODO: for Linux/Mac (NEEDS MORE TESTING)
+            var sbArgs = new StringBuilder(commandItem.CommandText);
             for (int i = 1; i < options.RemainingArgs.Count; i++)
             {
                 sbArgs.Append(" ").Append(options.RemainingArgs[i]);
@@ -116,11 +114,14 @@
             proc.StartInfo.CreateNoWindow = true;
             proc.StartInfo.RedirectStandardOutput = true;
             proc.StartInfo.RedirectStandardError = true;
-            // TODO: for Linux/Mac (NEEDS TESTING)
+            // TODO: for Linux/Mac (NEEDS MORE TESTING)
             proc.StartInfo.FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? "cmd.exe"
                 : "/bin/bash";
-            proc.StartInfo.Arguments = sbArgs.ToString();
+            proc.StartInfo.Arguments = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? "/C " + sbArgs.ToString()
+                : $"-c \"{sbArgs.ToString().Replace("\"", "\\\"")}\"";
+            sbArgs.ToString();
             proc.Start();
             string output = proc.StandardOutput.ReadToEnd();
             string errors = proc.StandardError.ReadToEnd();

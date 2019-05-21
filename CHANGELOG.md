@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v1.2.2 - 2019-05-20
+
+- initial testing on Linux (Debian)
+
+### Fixed
+- wrapped args in double-quotes to work with bash -c
+
 ## v1.2.1 - 2019-05-20
 
 ### Changed
