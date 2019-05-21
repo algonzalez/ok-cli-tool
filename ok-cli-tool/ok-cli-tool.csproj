@@ -10,7 +10,7 @@
     <AssemblyTitle>ok</AssemblyTitle>
     <Company></Company>
     <Copyright>Copyright 2019 Alberto Gonzalez</Copyright>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -20,7 +20,7 @@
     <PackageOutputPath>./dist</PackageOutputPath>
 
     <PackageId>ok-cli-tool</PackageId>
-    <PackageVersion>1.2.0</PackageVersion>
+    <PackageVersion>1.2.1</PackageVersion>
     <Authors>Alberto Gonzalez</Authors>
     <Description>A dotnet core command line tool to work with '.ok' files.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

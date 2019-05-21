@@ -6,12 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## v1.2.1 - 2019-05-20
+
 ### Changed
 - mention set environment variables from .ok-cli-tool.env file
 
 ### Fixed
 - display correct .env config file name (.ok-cli-tool.env NOT .ok-cli-tool)
 - restore original color when Ctrl+C is pressed at prompt
+- use '-c' instead of '/C' when calling bash
 
 ## v1.2.0 - 2019-04-18
 
