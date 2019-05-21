@@ -103,9 +103,9 @@
 
         private int RunCommand(OKCommandItem commandItem, CommandLineOptions options) {
             // TODO: for Linux/Mac (NEEDS TESTING)
-            //       does command need to be quoted???
-            // var sbArgs = new StringBuilder($"-c {okLine.CommandText}");
-            var sbArgs = new StringBuilder($"/C {commandItem.CommandText}");
+            var sbArgs = new StringBuilder(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? $"/C {commandItem.CommandText}"
+                : $"-c {commandItem.CommandText}");
             for (int i = 1; i < options.RemainingArgs.Count; i++)
             {
                 sbArgs.Append(" ").Append(options.RemainingArgs[i]);
